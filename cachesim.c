@@ -14,7 +14,7 @@
 int main(int argc, char *argv[])
 {
     if (argc != 3) {
-        printf("Usage: %s <direct> <trace file name>\n", argv[0]);
+        printf("Usage: %s (<direct>,<fully>,<nway>) <trace file name>\n", argv[0]);
         return 1;
     }
 
@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
 
     char* trace_file_name = argv[2];
     struct direct_mapped_cache d_cache;
+    struct fully_associative_cache a_cache;
+    struct nway_cache n_cache;
     char mem_request[20];
     uint64_t address;
     FILE *fp;
@@ -39,6 +41,7 @@ int main(int argc, char *argv[])
         d_cache.valid_field[i] = 0;
         d_cache.dirty_field[i] = 0;
         d_cache.tag_field[i] = 0;
+        //TODO: add a_cache initilization
     }
     d_cache.hits = 0;
     d_cache.misses = 0;
@@ -67,7 +70,20 @@ int main(int argc, char *argv[])
         printf("Cache Hit Rate:  %f\n", d_cache.hit_rate);
         printf("Cache Miss Rate: %f\n", d_cache.miss_rate);
         printf("\n");
+    }else if(strncmp(argv[1], "fully", 5)==0){/* Fully-Associative cache */
+      while (fgets(mem_request, 20, fp)!= NULL){
+        address = convert_address(mem_request);
+        fully_associative_cache_access(&a_cache, address);
+      }
+      //TODO: finish fully logic  
+    }else if(strncmp(argv[1], "nway", 5)==0){
+      while (fgets(mem_request, 20, fp)!=NULL){
+        address = convert_address(mem_request);
+        nway_cache_access(&n_cache, address);
+      }
+      //TODO: finish set logic
     }
+
 
     fclose(fp);
 
@@ -143,3 +159,63 @@ void direct_mapped_cache_access(struct direct_mapped_cache *cache, uint64_t addr
     }
 }
 
+void fully_associative_cache_access(struct fully_associative_cache *cache, uint64_t address){
+  
+  uint64_t block_addr = address >> (unsigned)log2(BLOCK_SIZE); 
+  uint64_t index = block_addr % NUM_BLOCKS;
+  uint64_t tag = block_addr >> (unsigned)log2(NUM_BLOCKS);
+
+#ifdef DBG
+  printf("Memory address: %llu, Block addres: %llu, Index: %llu, Tag: %llu", address, block_addr, index, tag);
+#endif
+
+  if(cache->valid_field[index] && cache->tag_field[index] == tag) {
+    cache->hits += 1;
+
+#ifdef DBG
+  printf("Hit!\n");
+#endif
+  } else{
+      //means its a miss
+      cache->misses += 1;
+#ifdef DBG
+  printf("Miss!\n");
+#endif
+      if(cache->valid_field[index] && cache->dirty_field[index]){
+        /*write the cache block back to memory*/
+      }
+      cache->tag_field[index] = tag;
+      cache->valid_field[index] = 1;
+      cache->dirty_field[index] = 0;
+  }
+}
+
+void nway_cache_access(struct nway_cache *cache, uint64_t address){
+  uint64_t block_addr = address >> (unsigned)log2(BLOCK_SIZE); 
+  uint64_t index = block_addr % NUM_SETS;
+  uint64_t tag = block_addr >> (unsigned)log2(NUM_SETS);
+
+#ifdef DBG
+  printf("Memory address: %llu, Block addres: %llu, Index: %llu, Tag: %llu", address, block_addr, index, tag);
+#endif
+
+  if(cache->valid_field[index] && cache->tag_field[index] == tag) {
+    cache->hits += 1;
+
+#ifdef DBG
+  printf("Hit!\n");
+#endif
+  } else{
+      //means its a miss
+      cache->misses += 1;
+#ifdef DBG
+  printf("Miss!\n");
+#endif
+      if(cache->valid_field[index] && cache->dirty_field[index]){
+        /*write the cache block back to memory*/
+      }
+      cache->tag_field[index] = tag;
+      cache->valid_field[index] = 1;
+      cache->dirty_field[index] = 0;
+  }
+}

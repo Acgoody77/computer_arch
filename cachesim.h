@@ -10,8 +10,8 @@
 #define WAY_SIZE    1         /* Associativity; 1-way = direct-mapped */
 #define CACHE_SIZE  32768     /* Cache capacity in bytes (must be power of 2)*/
 
-#define NUM_BLOCKS  (CACHE_SIZE / BLOCK_SIZE)
-#define NUM_SETS    (NUM_BLOCKS / WAY_SIZE)
+#define NUM_BLOCKS    (CACHE_SIZE / BLOCK_SIZE)
+#define NUM_SETS      (NUM_BLOCKS / WAY_SIZE)
 
 #define DBG
 
@@ -28,11 +28,39 @@ struct direct_mapped_cache {
     double hit_rate;                    /*Hit rate*/
     double miss_rate;                   /*Miss rate*/
 };
+/*TODO: create fully cache*/
+struct fully_associative_cache {
 
+    unsigned valid_field[NUM_BLOCKS];   /* Valid field */
+    unsigned dirty_field[NUM_BLOCKS];   /* Dirty field; since we don't distinguish writes and \\
+                                           reads in this project yet, this field doesn't really matter */
+    uint64_t tag_field[NUM_BLOCKS];     /* Tag field */
+    char data_field[NUM_BLOCKS][BLOCK_SIZE];  /* Data field; since we don't really fetch data, \\
+                                                 this field doesn't really matter */
+    int hits;                          /* Hit count */
+    int misses;                        /* Miss count */
+    double hit_rate;                    /*Hit rate*/
+    double miss_rate;                   /*Miss rate*/
+};
 
+/*TODO: create set cache*/
+struct nway_cache {
+  
+    unsigned valid_field[NUM_BLOCKS];   /* Valid field */
+    unsigned dirty_field[NUM_BLOCKS];   /* Dirty field; since we don't distinguish writes and \\
+                                           reads in this project yet, this field doesn't really matter */
+    uint64_t tag_field[NUM_BLOCKS];     /* Tag field */
+    char data_field[NUM_BLOCKS][BLOCK_SIZE];  /* Data field; since we don't really fetch data, \\
+                                                 this field doesn't really matter */
+    int hits;                          /* Hit count */
+    int misses;                        /* Miss count */
+    double hit_rate;                    /*Hit rate*/
+    double miss_rate;                   /*Miss rate*/
+};
 /*Read the memory traces and convert it to binary*/
 uint64_t convert_address(char memory[]);
 
 /*Simulate the direct-mapped cache*/
 void direct_mapped_cache_access(struct direct_mapped_cache *cache, uint64_t address);
-
+void fully_associative_cache_access(struct fully_associative_cache *cache, uint64_t address);
+void nway_cache_access(struct nway_cache *cache, uint64_t address);
