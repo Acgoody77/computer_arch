@@ -161,16 +161,61 @@ void direct_mapped_cache_access(struct direct_mapped_cache *cache, uint64_t addr
 
 void fully_associative_cache_access(struct fully_associative_cache *cache, uint64_t address){
   
+  uint64_t block_addr = address >> (unsigned)log2(BLOCK_SIZE); 
+  uint64_t index = block_addr % NUM_BLOCKS;
+  uint64_t tag = block_addr >> (unsigned)log2(NUM_BLOCKS);
+
+#ifdef DBG
+  printf("Memory address: %llu, Block addres: %llu, Index: %llu, Tag: %llu", address, block_addr, index, tag);
+#endif
+
+  if(cache->valid_field[index] && cache->tag_field[index] == tag) {
+    cache->hits += 1;
+
+#ifdef DBG
+  printf("Hit!\n");
+#endif
+  } else{
+      //means its a miss
+      cache->misses += 1;
+#ifdef DBG
+  printf("Miss!\n");
+#endif
+      if(cache->valid_field[index] && cache->dirty_field[index]){
+        /*write the cache block back to memory*/
+      }
+      cache->tag_field[index] = tag;
+      cache->valid_field[index] = 1;
+      cache->dirty_field[index] = 0;
+  }
 }
 
 void nway_cache_access(struct nway_cache *cache, uint64_t address){
-  
+  uint64_t block_addr = address >> (unsigned)log2(BLOCK_SIZE); 
+  uint64_t index = block_addr % NUM_SETS;
+  uint64_t tag = block_addr >> (unsigned)log2(NUM_SETS);
+
+#ifdef DBG
+  printf("Memory address: %llu, Block addres: %llu, Index: %llu, Tag: %llu", address, block_addr, index, tag);
+#endif
+
+  if(cache->valid_field[index] && cache->tag_field[index] == tag) {
+    cache->hits += 1;
+
+#ifdef DBG
+  printf("Hit!\n");
+#endif
+  } else{
+      //means its a miss
+      cache->misses += 1;
+#ifdef DBG
+  printf("Miss!\n");
+#endif
+      if(cache->valid_field[index] && cache->dirty_field[index]){
+        /*write the cache block back to memory*/
+      }
+      cache->tag_field[index] = tag;
+      cache->valid_field[index] = 1;
+      cache->dirty_field[index] = 0;
+  }
 }
-/*
- n-way formula?
- num_blocks = cache_size(bytes)/blocksize(bites)
- num sets = num blocks / n
- offset width = log2(blocksize)
- index width = log 2(num sets)
- tag width = 32 - offsed width - inded width
- */
