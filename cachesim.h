@@ -7,13 +7,13 @@
 
 #define BLOCK_SIZE  64        /* Cache block size (or cache line size) in bytes \\
                                  (must be power of 2). 4 Bytes = 1 Word */
-#define WAY_SIZE    1         /* Associativity; 1-way = direct-mapped */
-#define CACHE_SIZE  32768     /* Cache capacity in bytes (must be power of 2)*/
-
+#define WAY_SIZE    8         /* Associativity; 1-way = direct-mapped */
+#define CACHE_SIZE  131072     /* Cache capacity in bytes (must be power of 2)*/
+//32768 16384 65536 131072
 #define NUM_BLOCKS    (CACHE_SIZE / BLOCK_SIZE)
 #define NUM_SETS      (NUM_BLOCKS / WAY_SIZE)
 
-#define DBG
+//#define DBG
 
 /*The data structure of direct-mapped cache*/
 struct direct_mapped_cache {

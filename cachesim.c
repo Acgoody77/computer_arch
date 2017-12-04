@@ -41,16 +41,34 @@ int main(int argc, char *argv[])
         d_cache.valid_field[i] = 0;
         d_cache.dirty_field[i] = 0;
         d_cache.tag_field[i] = 0;
-        //TODO: add a_cache initilization
+        
+        a_cache.valid_field[i] = 0;
+        a_cache.dirty_field[i] = 0;
+        a_cache.tag_field[i] = 0;
+        
+        n_cache.valid_field[i] = 0;
+        n_cache.dirty_field[i] = 0;
+        n_cache.tag_field[i] = 0;
+        
     }
     d_cache.hits = 0;
     d_cache.misses = 0;
     d_cache.hit_rate = 0;
     d_cache.miss_rate = 0;
 
-    /* Opening the memory trace file */
+    a_cache.hits = 0;
+    a_cache.misses = 0;
+    a_cache.hit_rate = 0;
+    a_cache.miss_rate = 0;
+  
+    n_cache.hits = 0;
+    n_cache.misses = 0;
+    n_cache.hit_rate = 0;
+    n_cache.miss_rate = 0;
+  
     fp = fopen(trace_file_name, "r");
 
+    /* Opening the memory trace file */
     if (strncmp(argv[1], "direct", 6)==0) { /* Simulating direct-mapped cache */
         /* Read the memory request address and access the cache */
         while (fgets(mem_request, 20, fp)!= NULL) {
@@ -90,7 +108,7 @@ int main(int argc, char *argv[])
         printf("Cache Hit Rate:  %f\n", a_cache.hit_rate);
         printf("Cache Miss Rate: %f\n", a_cache.miss_rate);
         printf("\n");
-    }else if(strncmp(argv[1], "nway", 5)==0){
+    }else if(strncmp(argv[1], "nway", 4)==0){
       while (fgets(mem_request, 20, fp)!=NULL){
         address = convert_address(mem_request);
         nway_cache_access(&n_cache, address);
@@ -199,8 +217,8 @@ void fully_associative_cache_access(struct fully_associative_cache *cache, uint6
 #endif
 
 
-  for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_BLOCKS){
-    if(cache->valid_field[index] && cache->tag_field[index] == tag) {
+  for(uint64_t i = block_addr % 1; i < NUM_BLOCKS; i += 1){ //1 because number of sets is == 1 in fully
+    if(cache->valid_field[i] && cache->tag_field[i] == tag) {
       cache->hits += 1;
 
 #ifdef DBG
@@ -218,7 +236,7 @@ void fully_associative_cache_access(struct fully_associative_cache *cache, uint6
   printf("Miss!\n");
 #endif
     /*NRU replacement algorithm*/
-    for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_BLOCKS){
+    for(uint64_t i = block_addr % 1; i < NUM_BLOCKS; i += 1){
       if(!cache->valid_field[i]){
         cache->tag_field[i] = tag;
         cache->valid_field[i] = 1;
@@ -227,7 +245,7 @@ void fully_associative_cache_access(struct fully_associative_cache *cache, uint6
        }
     }
     if(write == 0){
-      for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_BLOCKS){
+      for(uint64_t i = block_addr % 1; i < NUM_BLOCKS; i += 1){
         cache->valid_field[i] = 0;
       }
       cache->tag_field[0] = tag;
@@ -250,7 +268,7 @@ void nway_cache_access(struct nway_cache *cache, uint64_t address){
 
 
   for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_SETS){
-    if(cache->valid_field[index] && cache->tag_field[index] == tag) {
+    if(cache->valid_field[i] && cache->tag_field[i] == tag) {
       cache->hits += 1;
 
 #ifdef DBG
