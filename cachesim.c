@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <stdlib.h>
 #include "cachesim.h"
 
 int main(int argc, char *argv[])
@@ -261,11 +262,24 @@ void nway_cache_access(struct nway_cache *cache, uint64_t address){
   uint64_t tag = block_addr >> (unsigned)log2(NUM_SETS);
   int hit = 0;
   int write = 0;
+  uint64_t t = 0;
+  uint64_t rand_int = (rand() % WAY_SIZE);
 
 #ifdef DBG
   printf("Memory address: %llu, Block addres: %llu, Index: %llu, Tag: %llu", address, block_addr, index, tag);
 #endif
-
+  /*PLRU*/
+  /*
+  for(t = 0; t < (WAY_SIZE - 1);){
+    if(tree[t] == 0){
+      tree[t] = 1;
+      t = (t*2 + 1);
+    }else{
+      tree[t] = 0;
+      t = (t*2 + 2);
+    }
+  }
+  *//*END PLRU*/
 
   for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_SETS){
     if(cache->valid_field[i] && cache->tag_field[i] == tag) {
@@ -285,7 +299,7 @@ void nway_cache_access(struct nway_cache *cache, uint64_t address){
 #ifdef DBG
   printf("Miss!\n");
 #endif
-    /*NRU replacement algorithm*/
+    /*NRU replacement algorithm*//*
     for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_SETS){
       if(!cache->valid_field[i]){
         cache->tag_field[i] = tag;
@@ -301,6 +315,27 @@ void nway_cache_access(struct nway_cache *cache, uint64_t address){
       cache->tag_field[0] = tag;
       cache->valid_field[0] = 1;
     }
-   /*End NRU replacement alg*/ 
+    *//*End NRU replacement alg*/
+
+    /*PLRU replacement algorithm*/
+    /*
+    for(t = 0; t < (WAY_SIZE - 1);){
+      if(tree[t] == 0){
+        t = (t*2 + 1);
+      }else{
+        t = (t*2 + 2);
+      }
+    }
+
+    cache->valid_field[tree[t] * NUM_SETS + index] = 1;
+    cache->tag_field[tree[t] * NUM_SETS + index] = tag; 
+    *//*End PLRU alg*/
+    
+    /*RR replacement alg*/
+
+    cache->valid_field[rand_int * NUM_SETS + index] = 1;
+    cache->tag_field[rand_int * NUM_SETS + index] = tag; 
+  
+    /*End RR alg*/
   }
 }

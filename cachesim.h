@@ -7,8 +7,8 @@
 
 #define BLOCK_SIZE  64        /* Cache block size (or cache line size) in bytes \\
                                  (must be power of 2). 4 Bytes = 1 Word */
-#define WAY_SIZE    8         /* Associativity; 1-way = direct-mapped */
-#define CACHE_SIZE  131072     /* Cache capacity in bytes (must be power of 2)*/
+#define WAY_SIZE    16         /* Associativity; 1-way = direct-mapped */
+#define CACHE_SIZE  32768     /* Cache capacity in bytes (must be power of 2)*/
 //32768 16384 65536 131072
 #define NUM_BLOCKS    (CACHE_SIZE / BLOCK_SIZE)
 #define NUM_SETS      (NUM_BLOCKS / WAY_SIZE)
@@ -28,7 +28,8 @@ struct direct_mapped_cache {
     double hit_rate;                    /*Hit rate*/
     double miss_rate;                   /*Miss rate*/
 };
-/*TODO: create fully cache*/
+
+
 struct fully_associative_cache {
 
     unsigned valid_field[NUM_BLOCKS];   /* Valid field */
@@ -43,7 +44,7 @@ struct fully_associative_cache {
     double miss_rate;                   /*Miss rate*/
 };
 
-/*TODO: create set cache*/
+
 struct nway_cache {
   
     unsigned valid_field[NUM_BLOCKS];   /* Valid field */
@@ -57,6 +58,10 @@ struct nway_cache {
     double hit_rate;                    /*Hit rate*/
     double miss_rate;                   /*Miss rate*/
 };
+
+/*PLRU tree integer initilization*/
+uint64_t tree[WAY_SIZE*2-1] = {0};
+
 /*Read the memory traces and convert it to binary*/
 uint64_t convert_address(char memory[]);
 
