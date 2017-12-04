@@ -76,12 +76,40 @@ int main(int argc, char *argv[])
         fully_associative_cache_access(&a_cache, address);
       }
       //TODO: finish fully logic  
+
+        /*calculate hit/miss rates*/
+        a_cache.hit_rate = ((double)a_cache.hits/(a_cache.hits + a_cache.misses));
+        a_cache.miss_rate = ((double)a_cache.misses/(a_cache.misses + a_cache.hits));
+        
+        /*Print out the results*/
+        printf("\n==================================\n");
+        printf("Cache type: Fully Associative Cache\n");
+        printf("==================================\n");
+        printf("Cache Hits:      %d\n", a_cache.hits);
+        printf("Cache Misses:    %d\n", a_cache.misses);
+        printf("Cache Hit Rate:  %f\n", a_cache.hit_rate);
+        printf("Cache Miss Rate: %f\n", a_cache.miss_rate);
+        printf("\n");
     }else if(strncmp(argv[1], "nway", 5)==0){
       while (fgets(mem_request, 20, fp)!=NULL){
         address = convert_address(mem_request);
         nway_cache_access(&n_cache, address);
       }
       //TODO: finish set logic
+   
+        /*calculate hit/miss rates*/
+        n_cache.hit_rate = ((double)n_cache.hits/(n_cache.hits + n_cache.misses));
+        n_cache.miss_rate = ((double)n_cache.misses/(n_cache.misses + n_cache.hits));
+        
+        /*Print out the results*/
+        printf("\n==================================\n");
+        printf("Cache type: N-Way Associative Cache\n");
+        printf("==================================\n");
+        printf("Cache Hits:      %d\n", n_cache.hits);
+        printf("Cache Misses:    %d\n", n_cache.misses);
+        printf("Cache Hit Rate:  %f\n", n_cache.hit_rate);
+        printf("Cache Miss Rate: %f\n", n_cache.miss_rate);
+        printf("\n");
     }
 
 
@@ -164,29 +192,48 @@ void fully_associative_cache_access(struct fully_associative_cache *cache, uint6
   uint64_t block_addr = address >> (unsigned)log2(BLOCK_SIZE); 
   uint64_t index = block_addr % NUM_BLOCKS;
   uint64_t tag = block_addr >> (unsigned)log2(NUM_BLOCKS);
-
+  int hit = 0;
+  int write = 0;
 #ifdef DBG
   printf("Memory address: %llu, Block addres: %llu, Index: %llu, Tag: %llu", address, block_addr, index, tag);
 #endif
 
-  if(cache->valid_field[index] && cache->tag_field[index] == tag) {
-    cache->hits += 1;
+
+  for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_BLOCKS){
+    if(cache->valid_field[index] && cache->tag_field[index] == tag) {
+      cache->hits += 1;
 
 #ifdef DBG
   printf("Hit!\n");
 #endif
-  } else{
+      hit = 1;
+      break;
+    }
+  } 
+  
+  if(hit == 0){
       //means its a miss
       cache->misses += 1;
 #ifdef DBG
   printf("Miss!\n");
 #endif
-      if(cache->valid_field[index] && cache->dirty_field[index]){
-        /*write the cache block back to memory*/
+    /*NRU replacement algorithm*/
+    for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_BLOCKS){
+      if(!cache->valid_field[i]){
+        cache->tag_field[i] = tag;
+        cache->valid_field[i] = 1;
+        write = 1;
+        break;
+       }
+    }
+    if(write == 0){
+      for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_BLOCKS){
+        cache->valid_field[i] = 0;
       }
-      cache->tag_field[index] = tag;
-      cache->valid_field[index] = 1;
-      cache->dirty_field[index] = 0;
+      cache->tag_field[0] = tag;
+      cache->valid_field[0] = 1;
+    }
+   /*End NRU replacement alg*/ 
   }
 }
 
@@ -194,28 +241,48 @@ void nway_cache_access(struct nway_cache *cache, uint64_t address){
   uint64_t block_addr = address >> (unsigned)log2(BLOCK_SIZE); 
   uint64_t index = block_addr % NUM_SETS;
   uint64_t tag = block_addr >> (unsigned)log2(NUM_SETS);
+  int hit = 0;
+  int write = 0;
 
 #ifdef DBG
   printf("Memory address: %llu, Block addres: %llu, Index: %llu, Tag: %llu", address, block_addr, index, tag);
 #endif
 
-  if(cache->valid_field[index] && cache->tag_field[index] == tag) {
-    cache->hits += 1;
+
+  for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_SETS){
+    if(cache->valid_field[index] && cache->tag_field[index] == tag) {
+      cache->hits += 1;
 
 #ifdef DBG
   printf("Hit!\n");
 #endif
-  } else{
+      hit = 1;
+      break;
+    }
+  } 
+  
+  if(hit == 0){
       //means its a miss
       cache->misses += 1;
 #ifdef DBG
   printf("Miss!\n");
 #endif
-      if(cache->valid_field[index] && cache->dirty_field[index]){
-        /*write the cache block back to memory*/
+    /*NRU replacement algorithm*/
+    for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_SETS){
+      if(!cache->valid_field[i]){
+        cache->tag_field[i] = tag;
+        cache->valid_field[i] = 1;
+        write = 1;
+        break;
+       }
+    }
+    if(write == 0){
+      for(uint64_t i = index; i < NUM_BLOCKS; i += NUM_SETS){
+        cache->valid_field[i] = 0;
       }
-      cache->tag_field[index] = tag;
-      cache->valid_field[index] = 1;
-      cache->dirty_field[index] = 0;
+      cache->tag_field[0] = tag;
+      cache->valid_field[0] = 1;
+    }
+   /*End NRU replacement alg*/ 
   }
 }
